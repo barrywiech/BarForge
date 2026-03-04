@@ -18,20 +18,20 @@ static void sendJson(AsyncWebServerRequest* req, const JsonDocument& doc, int co
 }
 
 static void sendOk(AsyncWebServerRequest* req, const char* msg = "ok") {
-    StaticJsonDocument<64> doc;
+    JsonDocument doc;
     doc["status"] = msg;
     sendJson(req, doc);
 }
 
 static void sendError(AsyncWebServerRequest* req, const char* msg, int code = 400) {
-    StaticJsonDocument<128> doc;
+    JsonDocument doc;
     doc["error"] = msg;
     sendJson(req, doc, code);
 }
 
 // ─── Load pump config from JSON into pumpConfigs[] ────────────────────────────
 static void loadPumpConfigsFromStorage() {
-    DynamicJsonDocument doc = storageReadJson(CONFIG_PATH);
+    JsonDocument doc = storageReadJson(CONFIG_PATH);
     if (doc.isNull()) return;
 
     JsonArray pumps = doc["pumps"].as<JsonArray>();
@@ -47,10 +47,10 @@ static void loadPumpConfigsFromStorage() {
 
 // ─── Save pumpConfigs[] to storage ───────────────────────────────────────────
 static void savePumpConfigsToStorage() {
-    DynamicJsonDocument doc(2048);
-    JsonArray pumps = doc.createNestedArray("pumps");
+    JsonDocument doc;
+    JsonArray pumps = doc["pumps"].to<JsonArray>();
     for (int i = 0; i < NUM_PUMPS; i++) {
-        JsonObject p = pumps.createNestedObject();
+        JsonObject p = pumps.add<JsonObject>();
         p["id"]         = i + 1;
         p["spirit"]     = pumpConfigs[i].spirit;
         p["bottleSize"] = pumpConfigs[i].bottleSize;
@@ -62,38 +62,36 @@ static void savePumpConfigsToStorage() {
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 void webServerInit() {
-    // Load pump configs from LittleFS at startup
     loadPumpConfigsFromStorage();
 
-    // Static files from LittleFS
     server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
 
     // ── GET /api/status ──────────────────────────────────────────────────────
     server.on("/api/status", HTTP_GET, [](AsyncWebServerRequest* req) {
-        DynamicJsonDocument doc(1024);
+        JsonDocument doc;
         doc["status"] = getStatusString();
         doc["estop"]  = (bool)emergencyStop;
         doc["ip"]     = WiFi.localIP().toString();
 
-        JsonArray pumps = doc.createNestedArray("pumps");
+        JsonArray pumps = doc["pumps"].to<JsonArray>();
         for (int i = 0; i < NUM_PUMPS; i++) {
-            JsonObject p = pumps.createNestedObject();
-            p["id"]        = i + 1;
-            p["spirit"]    = pumpConfigs[i].spirit;
-            p["bottleSize"]= pumpConfigs[i].bottleSize;
-            p["remaining"] = pumpConfigs[i].remaining;
-            p["mlPerSec"]  = pumpConfigs[i].mlPerSec;
-            p["active"]    = isPumpActive(i);
+            JsonObject p = pumps.add<JsonObject>();
+            p["id"]         = i + 1;
+            p["spirit"]     = pumpConfigs[i].spirit;
+            p["bottleSize"] = pumpConfigs[i].bottleSize;
+            p["remaining"]  = pumpConfigs[i].remaining;
+            p["mlPerSec"]   = pumpConfigs[i].mlPerSec;
+            p["active"]     = isPumpActive(i);
         }
         sendJson(req, doc);
     });
 
     // ── GET /api/config ──────────────────────────────────────────────────────
     server.on("/api/config", HTTP_GET, [](AsyncWebServerRequest* req) {
-        DynamicJsonDocument doc(2048);
-        JsonArray pumps = doc.createNestedArray("pumps");
+        JsonDocument doc;
+        JsonArray pumps = doc["pumps"].to<JsonArray>();
         for (int i = 0; i < NUM_PUMPS; i++) {
-            JsonObject p = pumps.createNestedObject();
+            JsonObject p = pumps.add<JsonObject>();
             p["id"]         = i + 1;
             p["spirit"]     = pumpConfigs[i].spirit;
             p["bottleSize"] = pumpConfigs[i].bottleSize;
@@ -108,7 +106,7 @@ void webServerInit() {
         [](AsyncWebServerRequest* req) {},
         nullptr,
         [](AsyncWebServerRequest* req, uint8_t* data, size_t len, size_t index, size_t total) {
-            DynamicJsonDocument doc(2048);
+            JsonDocument doc;
             if (deserializeJson(doc, data, len)) {
                 sendError(req, "Invalid JSON");
                 return;
@@ -117,10 +115,10 @@ void webServerInit() {
             for (JsonObject p : pumps) {
                 int idx = (int)p["id"] - 1;
                 if (idx < 0 || idx >= NUM_PUMPS) continue;
-                if (p.containsKey("spirit"))     strlcpy(pumpConfigs[idx].spirit, p["spirit"], 32);
-                if (p.containsKey("bottleSize")) pumpConfigs[idx].bottleSize = p["bottleSize"];
-                if (p.containsKey("remaining"))  pumpConfigs[idx].remaining  = p["remaining"];
-                if (p.containsKey("mlPerSec"))   pumpConfigs[idx].mlPerSec   = p["mlPerSec"];
+                if (p["spirit"].is<const char*>())  strlcpy(pumpConfigs[idx].spirit, p["spirit"], 32);
+                if (p["bottleSize"].is<float>())    pumpConfigs[idx].bottleSize = p["bottleSize"];
+                if (p["remaining"].is<float>())     pumpConfigs[idx].remaining  = p["remaining"];
+                if (p["mlPerSec"].is<float>())      pumpConfigs[idx].mlPerSec   = p["mlPerSec"];
             }
             savePumpConfigsToStorage();
             sendOk(req, "config saved");
@@ -129,10 +127,10 @@ void webServerInit() {
 
     // ── GET /api/recipes ─────────────────────────────────────────────────────
     server.on("/api/recipes", HTTP_GET, [](AsyncWebServerRequest* req) {
-        DynamicJsonDocument doc = storageReadJson(RECIPES_PATH, 8192);
+        JsonDocument doc = storageReadJson(RECIPES_PATH);
         if (doc.isNull()) {
-            DynamicJsonDocument empty(64);
-            empty.createNestedArray("recipes");
+            JsonDocument empty;
+            empty["recipes"].to<JsonArray>();
             sendJson(req, empty);
         } else {
             sendJson(req, doc);
@@ -144,7 +142,7 @@ void webServerInit() {
         [](AsyncWebServerRequest* req) {},
         nullptr,
         [](AsyncWebServerRequest* req, uint8_t* data, size_t len, size_t index, size_t total) {
-            DynamicJsonDocument doc(8192);
+            JsonDocument doc;
             if (deserializeJson(doc, data, len)) {
                 sendError(req, "Invalid JSON");
                 return;
@@ -161,17 +159,16 @@ void webServerInit() {
         [](AsyncWebServerRequest* req, uint8_t* data, size_t len, size_t index, size_t total) {
             if (emergencyStop) { sendError(req, "Emergency stop active"); return; }
 
-            DynamicJsonDocument body(512);
+            JsonDocument body;
             if (deserializeJson(body, data, len)) { sendError(req, "Invalid JSON"); return; }
 
             const char* name = body["name"] | "";
-            DynamicJsonDocument recipes = storageReadJson(RECIPES_PATH, 8192);
+            JsonDocument recipes = storageReadJson(RECIPES_PATH);
             if (recipes.isNull()) { sendError(req, "No recipes found"); return; }
 
             for (JsonObject recipe : recipes["recipes"].as<JsonArray>()) {
                 if (strcmp(recipe["name"] | "", name) == 0) {
                     JsonArray steps = recipe["steps"].as<JsonArray>();
-                    int count = steps.size();
                     RecipeStep rSteps[10];
                     int i = 0;
                     for (JsonObject step : steps) {
@@ -247,7 +244,6 @@ void webServerInit() {
         sendOk(req, "calibration saved");
     });
 
-    // 404 fallback
     server.onNotFound([](AsyncWebServerRequest* req) {
         req->send(404, "text/plain", "Not found");
     });

@@ -22,11 +22,9 @@
 #define TFT_RST   17   // RST
 // Backlight (BL) is managed by firmware via GPIO 21; not defined here.
 
-// ─── Display dimensions ───────────────────────────────────────────────────────
-// ILI9488 is 480×320 in landscape.  TFT_eSPI uses native portrait dimensions;
-// rotation is applied in firmware via tft.setRotation(1).
-#define TFT_WIDTH  320
-#define TFT_HEIGHT 480
+// TFT_WIDTH / TFT_HEIGHT are defined internally by TFT_eSPI from the driver —
+// do NOT redefine them here or you'll get "redeclaration" errors.
+// Rotation to landscape is done in firmware: tft.setRotation(1)
 
 // ─── SPI frequency ────────────────────────────────────────────────────────────
 #define SPI_FREQUENCY        27000000   // 27 MHz — safe for ILI9488

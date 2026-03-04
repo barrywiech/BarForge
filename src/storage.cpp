@@ -12,13 +12,13 @@ bool storageInit() {
     return true;
 }
 
-DynamicJsonDocument storageReadJson(const char* path, size_t capacity) {
-    DynamicJsonDocument doc(capacity);
+JsonDocument storageReadJson(const char* path) {
+    JsonDocument doc;
 
     File f = LittleFS.open(path, "r");
     if (!f) {
         Serial.printf("[Storage] File not found: %s\n", path);
-        return doc;  // empty / null doc
+        return doc;
     }
 
     DeserializationError err = deserializeJson(doc, f);
