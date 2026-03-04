@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BarForge</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <span class="logo">⚗ BarForge</span>
+  <nav>
+    <button class="active" onclick="showPage('dashboard',this)">Dashboard</button>
+    <button onclick="showPage('pour',this)">Pour</button>
+    <button onclick="showPage('recipes',this)">Recipes</button>
+    <button onclick="showPage('setup',this)">Setup</button>
+    <button onclick="showPage('calibrate',this)">Calibrate</button>
+  </nav>
+  <span id="ip-badge">—</span>
+  <span id="status-badge">IDLE</span>
+</header>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════════ DASHBOARD ══ -->
+<div id="page-dashboard" class="page active">
+  <div class="card">
+    <h2>Bottle Levels</h2>
+    <div id="bottle-list"><!-- filled by JS --></div>
+  </div>
+
+  <div class="card">
+    <h2>Quick Pour</h2>
+    <div id="quick-pour-grid" class="grid-3"><!-- filled by JS --></div>
+  </div>
+
+  <button class="estop-btn" onclick="apiStop()">⛔ EMERGENCY STOP</button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ POUR ══ -->
+<div id="page-pour" class="page">
+
+  <div class="card">
+    <h2>Pour Recipe</h2>
+    <div class="form-row">
+      <label>Select Recipe</label>
+      <select id="pour-recipe-select">
+        <option value="">— choose —</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="pourRecipe()">Pour Recipe</button>
+  </div>
+
+  <div class="card">
+    <h2>Manual Pour</h2>
+    <div class="form-cols">
+      <div class="form-row">
+        <label>Pump</label>
+        <select id="manual-pump">
+          <option value="1">Pump 1</option>
+          <option value="2">Pump 2</option>
+          <option value="3">Pump 3</option>
+          <option value="4">Pump 4</option>
+          <option value="5">Pump 5</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Volume (ml)</label>
+        <input type="number" id="manual-ml" value="30" min="1" max="200" step="5">
+      </div>
+    </div>
+    <div class="grid-3" style="margin-bottom:10px">
+      <button class="btn btn-secondary" onclick="setManualMl(30)">30 ml</button>
+      <button class="btn btn-secondary" onclick="setManualMl(60)">60 ml</button>
+      <button class="btn btn-secondary" onclick="setManualMl(90)">90 ml</button>
+    </div>
+    <button class="btn btn-primary" onclick="pourManual()">Pour</button>
+  </div>
+
+  <button class="estop-btn" onclick="apiStop()">⛔ EMERGENCY STOP</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ RECIPES ══ -->
+<div id="page-recipes" class="page">
+
+  <div class="card">
+    <h2>Recipes</h2>
+    <div id="recipe-list"><!-- filled by JS --></div>
+    <hr>
+    <h3>Add / Edit Recipe</h3>
+    <div class="form-row">
+      <label>Recipe Name</label>
+      <input type="text" id="new-recipe-name" placeholder="e.g. Vodka Lime">
+    </div>
+    <div id="recipe-steps-editor"><!-- filled by JS --></div>
+    <button class="btn btn-secondary btn-sm" style="margin-bottom:10px" onclick="addRecipeStep()">+ Add Step</button>
+    <br>
+    <button class="btn btn-primary" onclick="saveRecipe()">Save Recipe</button>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ SETUP ══ -->
+<div id="page-setup" class="page">
+  <div class="card">
+    <h2>Pump Configuration</h2>
+    <div id="setup-pumps"><!-- filled by JS --></div>
+    <button class="btn btn-primary" style="margin-top:10px" onclick="saveConfig()">Save Configuration</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ CALIBRATE ══ -->
+<div id="page-calibrate" class="page">
+  <div class="card">
+    <h2>Pump Calibration Wizard</h2>
+    <p class="muted" style="margin-bottom:16px;font-size:13px">
+      Calibration runs each pump for <strong>5 seconds</strong>.
+      Catch the output in a measuring cup and enter the actual volume.
+    </p>
+
+    <div class="form-row">
+      <label>Select Pump</label>
+      <select id="cal-pump-select">
+        <option value="1">Pump 1</option>
+        <option value="2">Pump 2</option>
+        <option value="3">Pump 3</option>
+        <option value="4">Pump 4</option>
+        <option value="5">Pump 5</option>
+      </select>
+    </div>
+
+    <div class="cal-step">
+      <span class="step-num">1</span>
+      Place a measuring cup under the nozzle for the selected pump.
+    </div>
+
+    <div class="cal-step">
+      <span class="step-num">2</span>
+      Click <strong>Start Run</strong> — pump will run for 5 seconds.
+      <br>
+      <button class="btn btn-primary" style="margin-top:10px" onclick="calStart()">Start Run</button>
+      <div class="progress-bar" style="margin-top:10px">
+        <div class="progress-fill" id="cal-progress" style="width:0%"></div>
+      </div>
+      <div id="cal-countdown" style="font-size:12px;color:var(--muted);margin-top:4px"></div>
+    </div>
+
+    <div class="cal-step">
+      <span class="step-num">3</span>
+      Enter the measured volume and save.
+      <div class="form-cols" style="margin-top:10px">
+        <div class="form-row">
+          <label>Measured Volume (ml)</label>
+          <input type="number" id="cal-ml" value="" min="1" max="500" step="0.5" placeholder="e.g. 42.5">
+        </div>
+        <div class="form-row" style="display:flex;align-items:flex-end">
+          <button class="btn btn-success" onclick="calSave()">Save Calibration</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="cal-result" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
+  </div>
+</div>
+
+</main>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
