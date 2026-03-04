@@ -1,0 +1,26 @@
+Project overview
+I am building a semi automated beverage dispenser that will allow me to connect up beverages to some hardware and have 
+it spense shots of spirits for me.  I have described some of the core hardware i have for the project and a basic outline of what i need the software to do
+I will need to 3d print a body for it eventually.
+
+Hardware
+1. I have a main Board that is an ESP32 Wroomreferenced here https://lastminuteengineers.com/esp32-wroom-32-pinout-reference/
+2. I have a SOlid State RelayBoard with 6 relats sw1 through to sw6.  the board has 6 chanels to activate each relat from CH1 to Ch6 plus a DC+ and DC- input.  I will be supplying 5V to switch the relays via DC+.  The relays will swictch 12V to control Peristaltic pumps
+3. I have 5 12V Peristaltic pumps that will be turned on by activating the relevant relay it is connected to
+4. I have a SPI module 3.5 inch. LCD colorful display screen ILI9488 drive IC controller for displaythat has the following pins on its J1 connector
+4.1 VDD, GND, CS, RST, O/C, SDI, SCK, BL, SDO, TCK, TCS, TDI, TDO, PE
+5 I have a 12V and 5V dual power supply for the project to power it that will plug into my mains outlet
+
+Software
+The software will need to be able to have the following features
+1. initial setup
+1.1 will allow setting up of the wifi network and connectivity
+1.2 will have a calibration function that will allow calibration of each of the peristaltic pumps to pour shots accurately at 30ml
+1.3 configuration section to configure the type of beverage connected to each pump i.e. pump 1 might have vodka configured.  configuration should have the size of bottle i.e. 750,ml and the amount of beverage left in the bottle when it is first connected.
+2. Operation
+2.1. The system will allow configuration of drink recipes so that selecting a drink with pour out the appropriate amounts of beverages connected to the relevant pump in addition to displaying additional ingredients that need to be added manually if they are not available on a pumps
+2.2 the user may select a drink recipe to pour out beverages or be able to select a beverage to manually dispense a 30ml or 60ml amount.
+2.3 the system will keep track of the amount of beverage left in each bottle by subtracting the amount dispensed from the initial volume loaded at configuration time
+2.4 the system will all be web based so that it is control via a web page from any device on the local network.
+2.5 the system will have a consistent theme for the web UI and be modern and sleek.
+2.6 the disply will show status on the system, actions as they occure like amount of beverage being dispensed and also allow display of configuration details
