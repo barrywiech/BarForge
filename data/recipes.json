@@ -1,0 +1,24 @@
+{
+  "recipes": [
+    {
+      "name": "Vodka Lime",
+      "steps": [
+        { "pump": 1, "ml": 60 },
+        { "pump": 5, "ml": 30 }
+      ]
+    },
+    {
+      "name": "G&T Base",
+      "steps": [
+        { "pump": 2, "ml": 50 }
+      ]
+    },
+    {
+      "name": "Margarita Base",
+      "steps": [
+        { "pump": 4, "ml": 50 },
+        { "pump": 5, "ml": 25 }
+      ]
+    }
+  ]
+}

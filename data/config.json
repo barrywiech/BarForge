@@ -1,0 +1,9 @@
+{
+  "pumps": [
+    { "id": 1, "spirit": "Vodka",      "bottleSize": 700, "remaining": 700, "mlPerSec": 2.0 },
+    { "id": 2, "spirit": "Gin",        "bottleSize": 700, "remaining": 700, "mlPerSec": 2.0 },
+    { "id": 3, "spirit": "Rum",        "bottleSize": 700, "remaining": 700, "mlPerSec": 2.0 },
+    { "id": 4, "spirit": "Tequila",    "bottleSize": 700, "remaining": 700, "mlPerSec": 2.0 },
+    { "id": 5, "spirit": "Lemon Juice","bottleSize": 500, "remaining": 500, "mlPerSec": 2.0 }
+  ]
+}
