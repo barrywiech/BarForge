@@ -1,0 +1,5 @@
+1. I have a main Board that is an ESP32 Wroom
+2. I have a SOlid State RelayBoard with 6 relats sw1 through to sw6.  the board has 6 chanels to activate each relat from CH1 to Ch6 plus a DC+ and DC- input.  I will be supplying 5V to switch the relays via DC+.  The relays will swictch 12V to control Peristaltic pumps
+3. I have 5 12V Peristaltic pumps that will be turned on by activating the relevat relay 
+4. I have a 4 inch LCD Display that has the following pins on its J1 connector
+4.1 VDD, GND, CS, RST, O/C, SDI, SCK, BL, SDO, TCK, TCS, TDI, TDO, PE
